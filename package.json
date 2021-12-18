@@ -5,11 +5,10 @@
   "license": "Apache-2.0",
   "gypfile": true,
   "scripts": {
-    "start": "yarn build && node ./build/src/app.js",
+    "start": "yarn && yarn build && node ./build/src/app.js",
     "prebuild_close": "./node_modules/.bin/tslint -c tslint.json -p tsconfig.json --fix",
-    "build": "./node_modules/.bin/tsc",
+    "build": "yarn && ./node_modules/.bin/tsc",
     "test": "yarn build && mocha ./build/**/*.test.js",
-    "clean": "rm -f ./db_*.sqlite",
     "build_image": "docker build -t ieigen/relay:v1 .",
     "deploy": "yarn build_image && docker run --name=eigen-relay -p 3000:3000 -v $PWD/data:/app/data  -d ieigen/relay:v1"
   },
