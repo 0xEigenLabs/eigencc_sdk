@@ -4,8 +4,8 @@
 
 #include <napi.h>
 
-#include "include/tee_task.h"
 #include "include/eigentee.h"
+#include "include/tee_task.h"
 
 eigen_enclave_info_t *g_enclave_info = NULL;
 eigen_auditor_set_t *g_auditors = NULL;
@@ -85,7 +85,7 @@ int release() {
   return 0;
 }
 
-Napi::Value Init(const Napi::CallbackInfo& info) {
+Napi::Value Init(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
   if (info.Length() != 4) {
     Napi::TypeError::New(env, "Wrong number of arguments (expect 4)")
@@ -93,7 +93,8 @@ Napi::Value Init(const Napi::CallbackInfo& info) {
     return env.Null();
   }
 
-  if (!info[0].IsString() || !info[1].IsString() || !info[2].IsString() || !info[3].IsNumber()) {
+  if (!info[0].IsString() || !info[1].IsString() || !info[2].IsString() ||
+      !info[3].IsNumber()) {
     Napi::TypeError::New(env, "Wrong arguments").ThrowAsJavaScriptException();
     return env.Null();
   }
@@ -108,14 +109,12 @@ Napi::Value Init(const Napi::CallbackInfo& info) {
     return Napi::Number::New(env, 0);
   }
 
-  int result = init(std::string(pub).c_str(),
-                    std::string(pri).c_str(),
-                    std::string(conf).c_str(),
-                    port1);
+  int result = init(std::string(pub).c_str(), std::string(pri).c_str(),
+                    std::string(conf).c_str(), port1);
   return Napi::Number::New(env, result);
 }
 
-Napi::Value Release(const Napi::CallbackInfo& info) {
+Napi::Value Release(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
   if (info.Length() != 0) {
     Napi::TypeError::New(env, "Wrong number of arguments (expect 0)")
@@ -127,15 +126,16 @@ Napi::Value Release(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, result);
 }
 
-Napi::Value SubmitTask(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
+Napi::Value SubmitTask(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
   if (info.Length() != 4) {
     Napi::TypeError::New(env, "Wrong number of arguments (expect 4)")
         .ThrowAsJavaScriptException();
     return env.Null();
   }
 
-  if (!info[0].IsString() || !info[1].IsString() || !info[2].IsString() || !info[3].IsString()) {
+  if (!info[0].IsString() || !info[1].IsString() || !info[2].IsString() ||
+      !info[3].IsString()) {
     Napi::TypeError::New(env, "Wrong arguments").ThrowAsJavaScriptException();
     return env.Null();
   }
@@ -151,17 +151,13 @@ Napi::Value SubmitTask(const Napi::CallbackInfo& info) {
   Napi::String uid = info[2].As<Napi::String>();
   Napi::String token = info[3].As<Napi::String>();
 
-  char* output = NULL; // malloc from `submit_task`
+  char *output = NULL; // malloc from `submit_task`
   size_t output_size = 0;
 
   int result = submit_task(std::string(method).c_str(),
-                           std::string(args).c_str(),
-                           std::string(uid).c_str(),
-                           std::string(token).c_str(),
-                           &output,
-                           &output_size);
+                           std::string(args).c_str(), std::string(uid).c_str(),
+                           std::string(token).c_str(), &output, &output_size);
 
-  
   if (result != 0) {
     if (output) {
       free(output);
@@ -183,8 +179,7 @@ Napi::Value SubmitTask(const Napi::CallbackInfo& info) {
 }
 
 Napi::Object InitModule(Napi::Env env, Napi::Object exports) {
-  exports.Set(Napi::String::New(env, "init"),
-              Napi::Function::New(env, Init));
+  exports.Set(Napi::String::New(env, "init"), Napi::Function::New(env, Init));
   exports.Set(Napi::String::New(env, "release"),
               Napi::Function::New(env, Release));
   exports.Set(Napi::String::New(env, "submit_task"),
