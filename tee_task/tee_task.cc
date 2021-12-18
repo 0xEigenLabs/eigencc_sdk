@@ -1,3 +1,4 @@
+#include <fstream>
 #include <string>
 
 #include <netdb.h>
@@ -85,6 +86,11 @@ int release() {
   return 0;
 }
 
+static bool is_file_exist(const char *fileName) {
+  std::ifstream infile(fileName);
+  return infile.good();
+}
+
 Napi::Value Init(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
   if (info.Length() != 4) {
@@ -107,6 +113,14 @@ Napi::Value Init(const Napi::CallbackInfo &info) {
   if (g_enclave_info && g_auditors) {
     // Already init
     return Napi::Number::New(env, 0);
+  }
+
+  // If env is set with invalid value, fast failue
+  // Just check the file exists
+  if (!is_file_exist(pub) || !is_file_exist(pri) || !is_file_exist(conf)) {
+    Napi::TypeError::New(env, "Files do not exist")
+        .ThrowAsJavaScriptException();
+    return env.Null();
   }
 
   int result = init(std::string(pub).c_str(), std::string(pri).c_str(),
