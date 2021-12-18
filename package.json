@@ -1,0 +1,29 @@
+{
+  "name": "eigen_relay",
+  "version": "0.0.1",
+  "main": "build/src/app.js",
+  "license": "Apache-2.0",
+  "gypfile": true,
+  "scripts": {
+    "start": "yarn build && node ./build/src/app.js",
+    "prebuild_close": "./node_modules/.bin/tslint -c tslint.json -p tsconfig.json --fix",
+    "build": "./node_modules/.bin/tsc",
+    "test": "yarn build && mocha ./build/**/*.test.js",
+    "clean": "rm -f ./db_*.sqlite",
+    "build_image": "docker build -t ieigen/relay:v1 .",
+    "deploy": "yarn build_image && docker run --name=eigen-relay -p 3000:3000 -v $PWD/data:/app/data  -d ieigen/relay:v1"
+  },
+  "devDependencies": {
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.10.3",
+    "chai": "^4.3.4",
+    "mocha": "^9.1.3",
+    "tslint": "^6.1.3",
+    "typescript": "^4.4.3"
+  },
+  "dependencies": {
+    "dotenv": "10.0.0",
+    "bindings": "~1.2.1",
+    "node-addon-api": "^1.0.0"
+  }
+}
