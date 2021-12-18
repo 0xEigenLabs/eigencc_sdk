@@ -1,3 +1,4 @@
+#include <iostream>
 #include <fstream>
 #include <string>
 
@@ -86,8 +87,8 @@ int release() {
   return 0;
 }
 
-static bool is_file_exist(const char *fileName) {
-  std::ifstream infile(fileName);
+static bool is_file_exist(Napi::String fileName) {
+  std::ifstream infile(std::string(fileName).c_str());
   return infile.good();
 }
 
