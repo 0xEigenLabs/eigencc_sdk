@@ -1,5 +1,5 @@
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string>
 
 #include <netdb.h>
@@ -118,28 +118,26 @@ Napi::Value Init(const Napi::CallbackInfo &info) {
 
   // If env is set with invalid value, fast failue
   // Just check the file exists
-  if (!is_file_exist(pub)){
-        Napi::TypeError::New(env, std::string("Pub File do not exist: ") + std::string(pub))
+  if (!is_file_exist(pub)) {
+    Napi::TypeError::New(env, std::string("Pub File do not exist: ") +
+                                  std::string(pub))
         .ThrowAsJavaScriptException();
     return env.Null();
-
   }
 
-    if (!is_file_exist(pri)){
-        Napi::TypeError::New(env, std::string("Pri File do not exist: ") + std::string(pri))
+  if (!is_file_exist(pri)) {
+    Napi::TypeError::New(env, std::string("Pri File do not exist: ") +
+                                  std::string(pri))
         .ThrowAsJavaScriptException();
     return env.Null();
-
   }
 
-
-  if (!is_file_exist(conf)){
-        Napi::TypeError::New(env, std::string("Conf File do not exist: ") + std::string(conf))
+  if (!is_file_exist(conf)) {
+    Napi::TypeError::New(env, std::string("Conf File do not exist: ") +
+                                  std::string(conf))
         .ThrowAsJavaScriptException();
     return env.Null();
-
   }
-
 
   int result = init(std::string(pub).c_str(), std::string(pri).c_str(),
                     std::string(conf).c_str(), port1);
