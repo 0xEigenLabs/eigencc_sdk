@@ -19,7 +19,7 @@
 int submit_task(const char *method, const char *args, const char *uid,
                 const char *token, char **output, size_t *output_size);
 
-int init(const char *pub, const char *pri, const char *conf, int32_t port1);
+int init(const char *pub, const char *pri, const char *conf, const char* hostname, int32_t port1);
 
 int release();
 
