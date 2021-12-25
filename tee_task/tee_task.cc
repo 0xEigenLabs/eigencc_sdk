@@ -12,6 +12,7 @@
 eigen_enclave_info_t *g_enclave_info = NULL;
 eigen_auditor_set_t *g_auditors = NULL;
 int32_t g_tms_port = 8082;
+char g_fns_hostname[128] = "localhost";
 
 int submit_task(const char *method, const char *args, const char *uid,
                 const char *token, char **output, size_t *output_size) {
@@ -19,9 +20,8 @@ int submit_task(const char *method, const char *args, const char *uid,
   char recvbuf[2048] = {0};
   int ret;
   struct hostent *hptr;
-  const char *fns_hostname = "fns";
 
-  if ((hptr = gethostbyname(fns_hostname)) == NULL) {
+  if ((hptr = gethostbyname(g_fns_hostname)) == NULL) {
     return EXIT_FAILURE;
   }
 
@@ -30,7 +30,7 @@ int submit_task(const char *method, const char *args, const char *uid,
   }
 
   tms_addr.sin_family = AF_INET;
-  tms_addr.sin_addr.s_addr = *(u_long *)hptr->h_addr_list[0];
+  tms_addr.sin_addr.s_addr = *(unsigned long *)hptr->h_addr_list[0];
   tms_addr.sin_port = htons(g_tms_port);
 
   eigen_t *context = eigen_context_new(g_enclave_info, uid, token,
@@ -61,7 +61,7 @@ int submit_task(const char *method, const char *args, const char *uid,
   return 0;
 }
 
-int init(const char *pub, const char *pri, const char *conf, int32_t port1) {
+int init(const char *pub, const char *pri, const char *conf, const char* hostname, int32_t port1) {
   eigen_init();
 
   g_auditors = eigen_auditor_set_new();
@@ -76,6 +76,9 @@ int init(const char *pub, const char *pri, const char *conf, int32_t port1) {
   if (g_enclave_info == NULL) {
     return EXIT_FAILURE;
   }
+
+  memset(g_fns_hostname, 0, sizeof(g_fns_hostname));
+  strncpy(g_fns_hostname, hostname, strlen(hostname));
   g_tms_port = port1;
 
   return 0;
@@ -94,14 +97,14 @@ static bool is_file_exist(Napi::String fileName) {
 
 Napi::Value Init(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
-  if (info.Length() != 4) {
-    Napi::TypeError::New(env, "Wrong number of arguments (expect 4)")
+  if (info.Length() != 5) {
+    Napi::TypeError::New(env, "Wrong number of arguments (expect 5)")
         .ThrowAsJavaScriptException();
     return env.Null();
   }
 
   if (!info[0].IsString() || !info[1].IsString() || !info[2].IsString() ||
-      !info[3].IsNumber()) {
+    !info[3].IsString() || !info[4].IsNumber()) {
     Napi::TypeError::New(env, "Wrong arguments").ThrowAsJavaScriptException();
     return env.Null();
   }
@@ -109,7 +112,8 @@ Napi::Value Init(const Napi::CallbackInfo &info) {
   Napi::String pub = info[0].As<Napi::String>();
   Napi::String pri = info[1].As<Napi::String>();
   Napi::String conf = info[2].As<Napi::String>();
-  int32_t port1 = info[3].As<Napi::Number>().Int32Value();
+  Napi::String hostname = info[3].As<Napi::String>();
+  int32_t port1 = info[4].As<Napi::Number>().Int32Value();
 
   if (g_enclave_info && g_auditors) {
     // Already init
@@ -140,7 +144,7 @@ Napi::Value Init(const Napi::CallbackInfo &info) {
   }
 
   int result = init(std::string(pub).c_str(), std::string(pri).c_str(),
-                    std::string(conf).c_str(), port1);
+                    std::string(conf).c_str(), std::string(hostname).c_str(), port1);
   return Napi::Number::New(env, result);
 }
 
