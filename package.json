@@ -1,6 +1,6 @@
 {
   "name": "relay_sdk",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "Apache-2.0",
   "scripts": {
     "prebuild_xx": "./node_modules/.bin/tslint -c tslint.json -p tsconfig.json --fix",

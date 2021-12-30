@@ -1,4 +1,4 @@
-export * from "./src/ecies"
-export * from "./src/util"
-export * from "./src/sdk"
+exports.ecies = require("./src/ecies")
+exports.util = require("./src/util")
+exports.sdk = require("./src/sdk")
 
