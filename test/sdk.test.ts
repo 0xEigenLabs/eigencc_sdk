@@ -14,17 +14,17 @@ util.require_env_variables([
   "TEESDK_ENCLAVE_INFO_PATH",
 ]);
 
-const AUDITOR_BASE_DIR = process.env["TEESDK_AUDITOR_BASE_DIR"];
+const AUDITOR_BASE_DIR = process.env.TEESDK_AUDITOR_BASE_DIR;
 // auditor_name, e.g., "godzilla"
-const AUDITOR_NAME = process.env["TEESDK_AUDITOR_NAME"];
-const ENCLAVE_INFO_PATH = process.env["TEESDK_ENCLAVE_INFO_PATH"];
+const AUDITOR_NAME = process.env.TEESDK_AUDITOR_NAME;
+const ENCLAVE_INFO_PATH = process.env.TEESDK_ENCLAVE_INFO_PATH;
 const PUB = `${AUDITOR_BASE_DIR}/${AUDITOR_NAME}/${AUDITOR_NAME}.public.der`;
 const SIG = `${AUDITOR_BASE_DIR}/${AUDITOR_NAME}/${AUDITOR_NAME}.sign.sha256`;
 const ROOTCA = `deps/ias_root_ca_cert.pem`;
 
 describe("basic sdk", async() => {
     it("Basic test", async() => {
-        let client = new sdk.EigenRelayClient(
+        const client = new sdk.EigenRelayClient(
             "fns",
             PUB,
             SIG,
@@ -34,9 +34,7 @@ describe("basic sdk", async() => {
             8082
         );
         client.submit_task("EigenTEERegister", "", async (relayPubKey) => {
-            console.log(relayPubKey)
-
-            if (relayPubKey.length == 0) {
+            if (relayPubKey.length === 0) {
                 throw new Error("Get public key failed")
             }
 
@@ -55,31 +53,31 @@ describe("basic sdk", async() => {
             const publicKey = keyPair.getPublic();
 
             // generate c1
-            let privateKey = crypto.randomBytes(32).toString("base64");
-            console.log("msg", privateKey)
+            const privateKey = crypto.randomBytes(32).toString("base64");
+            // console.log("msg", privateKey)
             const c1 = ecies.encrypt(publicKey, privateKey, options).toString("hex");
 
             // generate cc1
-            let password = crypto.randomBytes(16).toString("base64");
-            console.log("Password", password)
-            let cc1 = ecies.encrypt(publicKey, password, options).toString("hex");
+            const password = crypto.randomBytes(16).toString("base64");
+            // console.log("Password", password)
+            const cc1 = ecies.encrypt(publicKey, password, options).toString("hex");
 
             // encrypt by kms
             let encryptMsg = `encrypt|${c1}|${cc1}|`
             client.submit_task("relay", encryptMsg, async (c2) => {
-                console.log(c2)
+                // console.log(c2)
                 // decrypt
-                let aesKey = crypto.randomBytes(32)
-                console.log(aesKey)
-                let cr1 = ecies.encrypt(publicKey, aesKey, options).toString("hex")
-                let cc2 = c2.toString("hex")
+                const aesKey = crypto.randomBytes(32)
+                // console.log(aesKey)
+                const cr1 = ecies.encrypt(publicKey, aesKey, options).toString("hex")
+                const cc2 = c2.toString("hex")
 
                 encryptMsg = `decrypt|${cc2}|${cc1}|${cr1}`
                 client.submit_task("relay", encryptMsg, async (decryptedPrivateKey) => {
-                    let privateKey2 = ecies.aes_dec('aes-256-gcm', aesKey, Buffer.from(decryptedPrivateKey, "base64"))
-                    console.log("msg", privateKey2)
+                    const privateKey2 = ecies.aes_dec('aes-256-gcm', aesKey, Buffer.from(decryptedPrivateKey, "base64"))
+                    // console.log("msg", privateKey2)
                     chai.expect(privateKey).to.eq(privateKey2)
-                    console.log("Done")
+                    // console.log("Done")
                 })
             })
         })

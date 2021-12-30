@@ -1,16 +1,11 @@
 {
   "name": "relay_sdk",
   "version": "0.0.1",
-  "main": "build/src/app.js",
   "license": "Apache-2.0",
-  "gypfile": true,
   "scripts": {
-    "start": "yarn && yarn build && node ./build/src/app.js",
-    "prebuild_close": "./node_modules/.bin/tslint -c tslint.json -p tsconfig.json --fix",
+    "prebuild_xx": "./node_modules/.bin/tslint -c tslint.json -p tsconfig.json --fix",
     "build": "yarn && ./node_modules/.bin/tsc",
-    "test": "yarn build && mocha ./build/**/*.test.js",
-    "build_image": "docker build -t ieigen/relay:v1 .",
-    "deploy": "yarn build_image && docker run --name=eigen-relay -p 3000:3000 -v $PWD/data:/app/data  -d ieigen/relay:v1"
+    "test": "yarn build && mocha ./build/**/*.test.js"
   },
   "devDependencies": {
     "@types/mocha": "^9.0.0",
