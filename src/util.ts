@@ -9,7 +9,7 @@ const require_env_variables = (envVars) => {
 };
 
 const BaseResp = function (errno, message, data) {
-  return { errno: errno, message: message, data: data };
+  return { errno, message, data };
 };
 const Succ = function (data) {
   return BaseResp(0, "", data);

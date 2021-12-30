@@ -3,6 +3,9 @@
     "extends": [
         "tslint:recommended"
     ],
+    "exclude": [
+          "src/ecies.ts"
+    ],
     "jsRules": {},
     "rules": {
         "trailing-comma": [ false ]

@@ -5,12 +5,12 @@ import { v4 as uuidv4 } from 'uuid';
 
 const struct = require('python-struct');
 
-//const tls = require("tls");
+// const tls = require("tls");
 const forge = require('node-forge');
-var pki = forge.pki;
+const pki = forge.pki;
 const toml = require('toml');
-//const { X509Certificate } = await import('crypto');
-//const { Certificate } = await import('crypto');
+// const { X509Certificate } = await import('crypto');
+// const { Certificate } = await import('crypto');
 import { verify } from "crypto"
 
 function wait(ms) {
@@ -61,30 +61,29 @@ export class EigenRelayClient {
     submit_task(method: string, payload: string, callback: any) {
         const options = {
             // Necessary only if the server requires client certificate authentication.
-            //key: fs.readFileSync(this.private_key),
-            //cert: fs.readFileSync(this.cert),
+            // key: fs.readFileSync(this.private_key),
+            // cert: fs.readFileSync(this.cert),
 
             // Necessary only if the server uses a self-signed certificate.
-            //ca: [ fs.readFileSync(this.as_root_ca_cert_path) ],
+            // ca: [ fs.readFileSync(this.as_root_ca_cert_path) ],
 
             // Necessary only if the server's cert isn't for "localhost".
-            //checkServerIdentity: () => { return null; },
+            // checkServerIdentity: () => { return null; },
             rejectUnauthorized: false,
         };
-        let socket = connect(this.port, this.hostname, options, () => {
+        const socket = connect(this.port, this.hostname, options, () => {
             console.log('client connected',
                         socket.authorized ? 'authorized' : 'unauthorized');
 
-            let peerCert = socket.getPeerCertificate(true)
-            console.log(peerCert)
+            const peerCert = socket.getPeerCertificate(true)
+            //console.log(peerCert)
 
             this._verify_report(peerCert.raw)
-            let task: Task = new Task(
+            const task: Task = new Task(
                 method,
                 payload
             )
-            let res = this._write_message(socket, task)
-            console.log(res)
+            this._write_message(socket, task)
             console.log("Remote address", socket.remoteAddress)
         })
 
@@ -96,7 +95,7 @@ export class EigenRelayClient {
         }).on('end', function() {
             console.log("Read end,")
         }).on('error', function () {
-            //How kill all processes of the current socket ???
+            // How kill all processes of the current socket ???
             console.log("error!")
         }).on("close", () => {
             callback(this._read_message(data))
@@ -105,43 +104,43 @@ export class EigenRelayClient {
     }
 
     _read_message(data: Buffer): string {
-        let raw = "";
-        let response_len = struct.unpack("<Q", data.slice(0, 8))
-        let len = Number(response_len[0])
+        const raw = "";
+        const response_len = struct.unpack("<Q", data.slice(0, 8))
+        const len = Number(response_len[0])
         console.log("len: ", len)
         if (data.length != (8 + len)) {
             throw new Error("Read not complete")
         }
-        let res = JSON.parse(data.slice(8).toString());
+        const res = JSON.parse(data.slice(8).toString());
         console.log(res)
-        if (res["Ok"] == undefined) {
+        if (res.Ok == undefined) {
             throw new Error("Read invalid response")
         }
-        return res["Ok"]["result"]
+        return res.Ok.result
     }
 
     _write_message(socket: any, message: any) {
-        let message_json = JSON.stringify(message)
-        let msg_format = "<Q" + message_json.length + "s"
+        const message_json = JSON.stringify(message)
+        const msg_format = "<Q" + message_json.length + "s"
         console.log(msg_format)
-        let res = socket.write(struct.pack(msg_format, message_json.length, message_json), "utf8",  () => {
+        const res = socket.write(struct.pack(msg_format, message_json.length, message_json), "utf8",  () => {
             console.log("write len done")
         } )
     }
 
     _verify_report(peerCert): boolean{
-        if (process.env["SGX_MODE"] == "SW")
+        if (process.env.SGX_MODE == "SW")
             return true
-        let ext = JSON.parse(peerCert.extensions[0].value.value)
-        let report = ext["report"]
-        let signature = Buffer.from(ext["signature"])
-        let signing_cert = Buffer.from(ext["signing_cert"])
-        var cert = pki.certificateFromAsn1(signing_cert);
+        const ext = JSON.parse(peerCert.extensions[0].value.value)
+        const report = ext.report
+        const signature = Buffer.from(ext.signature)
+        const signing_cert = Buffer.from(ext.signing_cert)
+        const cert = pki.certificateFromAsn1(signing_cert);
 
         let as_root_ca_cert = fs.readFileSync(this.as_root_ca_cert_path)
         as_root_ca_cert = pki.certificateFromAsn1(as_root_ca_cert)
-        //store = X509Store()
-        var store = pki.createCaStore([]);
+        // store = X509Store()
+        const store = pki.createCaStore([]);
         store.addCertificate(as_root_ca_cert)
         store.addCertificate(signing_cert)
 
@@ -151,25 +150,25 @@ export class EigenRelayClient {
         });
 
         // verify report's signature
-        verify('sha256', Buffer.from(ext["report"]), signing_cert, signature)
+        verify('sha256', Buffer.from(ext.report), signing_cert, signature)
 
-        let report2 = JSON.parse(report)
-        let quote = report2['isvEnclaveQuoteBody']
+        const report2 = JSON.parse(report)
+        let quote = report2.isvEnclaveQuoteBody
         quote = quote.toString("base64")
 
-        //get mr_enclave and mr_signer from the quote
-        let mr_enclave = quote.substring(112, 112 + 32).toString("hex")
-        let mr_signer = quote.substring(176, 176 + 32).toString("hex")
+        // get mr_enclave and mr_signer from the quote
+        const mr_enclave = quote.substring(112, 112 + 32).toString("hex")
+        const mr_signer = quote.substring(176, 176 + 32).toString("hex")
 
-        //get enclave_info
-        let enclave_info = toml.parse(this.enclave_info_path)
+        // get enclave_info
+        const enclave_info = toml.parse(this.enclave_info_path)
 
-        //verify mr_enclave and mr_signer
-        let enclave_name = "teaclave_" + this.name + "_service"
-        if (mr_enclave != enclave_info[enclave_name]["mr_enclave"])
+        // verify mr_enclave and mr_signer
+        const enclave_name = "teaclave_" + this.name + "_service"
+        if (mr_enclave != enclave_info[enclave_name].mr_enclave)
             throw new Error("mr_enclave error")
 
-        if (mr_signer != enclave_info[enclave_name]["mr_signer"])
+        if (mr_signer != enclave_info[enclave_name].mr_signer)
             throw new Error("mr_signer error")
 
         return true;

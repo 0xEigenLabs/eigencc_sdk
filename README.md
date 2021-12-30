@@ -1,4 +1,6 @@
-# Eigen Relay
+# Eigen Relay SDK
+
+Relay SDK is the developer tools for Eigen Relay.
 
 ## Usage
 
