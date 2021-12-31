@@ -9,6 +9,7 @@
   },
   "include": ["./src/**/*", "./test/**/*", "index.ts"],
   "exclude": [
-    "./lib"
+    "./lib",
+    "./node_modules"
   ]
 }
