@@ -1,24 +1,29 @@
 {
   "name": "relay_sdk",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "license": "Apache-2.0",
+  "keywords": ["Eigen", "TEE", "EigenCC", "EigenRelay", "Blockchain"],
+  "homepage": "https://ieigen.com",
+  "repository": "https://github.com/ieigen/relay_sdk",
+  "main": "./lib/index.js",
+  "author": "Eigenlab",
   "scripts": {
     "prebuild_xx": "./node_modules/.bin/tslint -c tslint.json -p tsconfig.json --fix",
     "build": "yarn && ./node_modules/.bin/tsc",
-    "test": "yarn build && mocha ./build/**/*.test.js"
+    "test": "yarn build && mocha ./lib/**/*.test.js"
   },
   "devDependencies": {
     "@types/mocha": "^9.0.0",
     "@types/node": "^16.10.3",
     "@types/uuid": "^8.3.3",
     "chai": "^4.3.4",
-    "elliptic": "^6.5.4",
     "mocha": "^9.1.3",
     "tslint": "^6.1.3",
     "typescript": "^4.4.3"
   },
   "dependencies": {
     "dotenv": "10.0.0",
+    "elliptic": "^6.5.4",
     "node-forge": "^0.10.0",
     "python-struct": "^1.1.3",
     "toml": "^3.0.0",
