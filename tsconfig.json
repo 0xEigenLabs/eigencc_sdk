@@ -1,10 +1,15 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "outDir": "./build",
+    "outDir": "./lib",
     "allowJs": true,
+    "declaration": true,
     "target": "es2021",
     "esModuleInterop": true
   },
-  "include": ["./src/**/*", "./test/**/*", "index.ts"]
+  "include": ["./src/**/*", "./test/**/*", "index.ts"],
+  "exclude": [
+    "./lib",
+    "./node_modules"
+  ]
 }
