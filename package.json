@@ -1,8 +1,14 @@
 {
   "name": "relay_sdk",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "license": "Apache-2.0",
-  "keywords": ["EigenNetwork", "TEE", "EigenCC", "EigenRelay", "Blockchain"],
+  "keywords": [
+    "EigenNetwork",
+    "TEE",
+    "EigenCC",
+    "EigenRelay",
+    "Blockchain"
+  ],
   "homepage": "https://ieigen.com",
   "repository": "https://github.com/ieigen/relay_sdk",
   "main": "./lib/index.js",
@@ -23,9 +29,10 @@
     "typescript": "^4.4.3"
   },
   "dependencies": {
+    "@peculiar/webcrypto": "^1.2.3",
+    "@peculiar/x509": "^1.6.1",
     "dotenv": "10.0.0",
     "elliptic": "^6.5.4",
-    "node-forge": "^0.10.0",
     "python-struct": "^1.1.3",
     "toml": "^3.0.0",
     "uuid": "^8.3.2"

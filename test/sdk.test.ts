@@ -12,6 +12,8 @@ util.require_env_variables([
   "TEESDK_AUDITOR_BASE_DIR",
   "TEESDK_AUDITOR_NAME",
   "TEESDK_ENCLAVE_INFO_PATH",
+  "RELAY_ADDRESS",
+  "RELAY_PORT"
 ]);
 
 const AUDITOR_BASE_DIR = process.env.TEESDK_AUDITOR_BASE_DIR;
@@ -30,8 +32,8 @@ describe("basic sdk", async() => {
             SIG,
             ROOTCA,
             ENCLAVE_INFO_PATH,
-            "localhost",
-            8082
+            process.env.RELAY_ADDRESS,
+            Number(process.env.RELAY_PORT)
         );
         client.submit_task("EigenTEERegister", "", async (relayPubKey) => {
             if (relayPubKey.length === 0) {
@@ -64,7 +66,7 @@ describe("basic sdk", async() => {
 
             // encrypt by kms
             let encryptMsg = `encrypt|${c1}|${cc1}|`
-            client.submit_task("relay", encryptMsg, async (c2) => {
+            client.submit_task("relay", encryptMsg, async(c2) => {
                 // console.log(c2)
                 // decrypt
                 const aesKey = crypto.randomBytes(32)
