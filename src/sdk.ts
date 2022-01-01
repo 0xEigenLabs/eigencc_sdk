@@ -1,17 +1,13 @@
 import { createSecureContext, SecureContext, ConnectionOptions, connect, getCiphers, DEFAULT_ECDH_CURVE, createServer, TLSSocket } from "tls";
 import * as fs from "fs";
-
 import { v4 as uuidv4 } from 'uuid';
-
 const struct = require('python-struct');
-
-// const tls = require("tls");
-const forge = require('node-forge');
-const pki = forge.pki;
 const toml = require('toml');
-// const { X509Certificate } = await import('crypto');
-// const { Certificate } = await import('crypto');
-import { verify } from "crypto"
+import * as x509 from "@peculiar/x509";
+import { Crypto } from "@peculiar/webcrypto";
+
+const crypto = new Crypto();
+x509.cryptoProvider.set(crypto);
 
 function wait(ms) {
     return new Promise((resolve) => setTimeout(() => resolve, ms));
@@ -71,20 +67,29 @@ export class EigenRelayClient {
             // checkServerIdentity: () => { return null; },
             rejectUnauthorized: false,
         };
-        const socket = connect(this.port, this.hostname, options, () => {
+        const socket = connect(this.port, this.hostname, options, async() => {
             console.log('client connected',
                         socket.authorized ? 'authorized' : 'unauthorized');
 
             const peerCert = socket.getPeerCertificate(true)
-            //console.log(peerCert)
 
-            this._verify_report(peerCert.raw)
+            let verifyResult = false
+            try {
+                verifyResult = await this._verify_report(peerCert.raw.toString("base64"))
+            } catch (e) {
+                console.log("Verify report failed", e)
+                verifyResult = false
+            }
+            if (verifyResult != true) {
+                //TODO throw exception
+                console.log("Skip verifying")
+            }
+
             const task: Task = new Task(
                 method,
                 payload
             )
             this._write_message(socket, task)
-            console.log("Remote address", socket.remoteAddress)
         })
 
         let data
@@ -107,12 +112,10 @@ export class EigenRelayClient {
         const raw = "";
         const response_len = struct.unpack("<Q", data.slice(0, 8))
         const len = Number(response_len[0])
-        console.log("len: ", len)
         if (data.length != (8 + len)) {
             throw new Error("Read not complete")
         }
         const res = JSON.parse(data.slice(8).toString());
-        console.log(res)
         if (res.Ok == undefined) {
             throw new Error("Read invalid response")
         }
@@ -122,49 +125,57 @@ export class EigenRelayClient {
     _write_message(socket: any, message: any) {
         const message_json = JSON.stringify(message)
         const msg_format = "<Q" + message_json.length + "s"
-        console.log(msg_format)
         const res = socket.write(struct.pack(msg_format, message_json.length, message_json), "utf8",  () => {
             console.log("write len done")
         } )
     }
 
-    _verify_report(peerCert): boolean{
+    async _verify_report(certDer): Promise<boolean> {
         if (process.env.SGX_MODE == "SW")
             return true
-        const ext = JSON.parse(peerCert.extensions[0].value.value)
-        const report = ext.report
-        const signature = Buffer.from(ext.signature)
-        const signing_cert = Buffer.from(ext.signing_cert)
-        const cert = pki.certificateFromAsn1(signing_cert);
 
-        let as_root_ca_cert = fs.readFileSync(this.as_root_ca_cert_path)
-        as_root_ca_cert = pki.certificateFromAsn1(as_root_ca_cert)
-        // store = X509Store()
-        const store = pki.createCaStore([]);
-        store.addCertificate(as_root_ca_cert)
-        store.addCertificate(signing_cert)
+        let peerCert = new x509.X509Certificate(certDer)
+        let value = peerCert.extensions[0].value
+        let ext = new TextDecoder().decode(value).split("|")
+        console.log(ext)
 
-        pki.verifyCertificateChain(store, [signing_cert], (verified, depth, chain) => {
-            console.log("IAS Root ca verify success")
-            return true;
-        });
+        const report = JSON.parse(ext[0])
+        const signature = Buffer.from(ext[1],"base64")
+
+        const signing_cert = new x509.X509Certificate(ext[2]);
+
+        //verify signing cert with AS root cert
+        let as_root_ca_cert_str = fs.readFileSync(this.as_root_ca_cert_path)
+        const root_cert = new x509.X509Certificate(as_root_ca_cert_str);
+
+        let signingVerify = await signing_cert.verify({publicKey: root_cert})
+        if (signingVerify != true) {
+            throw new Error("Invalid signing certificate")
+        }
 
         // verify report's signature
-        verify('sha256', Buffer.from(ext.report), signing_cert, signature)
+        let publicKey = await signing_cert.publicKey.export();
+        let verifySig = await crypto.subtle.verify(
+            publicKey.algorithm.name,
+            publicKey,
+            signature,
+            Buffer.from(ext[0]))
+        console.log("verifySig", verifySig)
+        if (verifySig != true) {
+            throw new Error("Verify report signature failed")
+        }
 
-        const report2 = JSON.parse(report)
-        let quote = report2.isvEnclaveQuoteBody
-        quote = quote.toString("base64")
+        let quote = Buffer.from(report.isvEnclaveQuoteBody, "base64").toString("hex")
 
         // get mr_enclave and mr_signer from the quote
-        const mr_enclave = quote.substring(112, 112 + 32).toString("hex")
-        const mr_signer = quote.substring(176, 176 + 32).toString("hex")
+        const mr_enclave = quote.substring(224, 224 + 64)
+        const mr_signer = quote.substring(352, 352 + 64)
 
         // get enclave_info
-        const enclave_info = toml.parse(this.enclave_info_path)
+        const enclave_info = toml.parse(fs.readFileSync(this.enclave_info_path))
 
         // verify mr_enclave and mr_signer
-        const enclave_name = "teaclave_" + this.name + "_service"
+        const enclave_name = this.name
         if (mr_enclave != enclave_info[enclave_name].mr_enclave)
             throw new Error("mr_enclave error")
 
