@@ -56,8 +56,8 @@ describe("basic sdk", async() => {
 
             // generate c1
             const privateKey = crypto.randomBytes(32).toString("base64");
-            // console.log("msg", privateKey)
             const c1 = ecies.encrypt(publicKey, privateKey, options).toString("hex");
+            console.log("c1", c1)
 
             // generate cc1
             const password = crypto.randomBytes(16).toString("base64");
@@ -66,6 +66,7 @@ describe("basic sdk", async() => {
 
             // encrypt by kms
             let encryptMsg = `encrypt|${c1}|${cc1}|`
+            console.log(encryptMsg)
             client.submit_task("relay", encryptMsg, async(c2) => {
                 // console.log(c2)
                 // decrypt
@@ -75,6 +76,7 @@ describe("basic sdk", async() => {
                 const cc2 = c2.toString("hex")
 
                 encryptMsg = `decrypt|${cc2}|${cc1}|${cr1}`
+                console.log("cc2, cc1, cr1", encryptMsg)
                 client.submit_task("relay", encryptMsg, async (decryptedPrivateKey) => {
                     const privateKey2 = ecies.aes_dec('aes-256-gcm', aesKey, Buffer.from(decryptedPrivateKey, "base64"))
                     // console.log("msg", privateKey2)
