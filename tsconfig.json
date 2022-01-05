@@ -5,7 +5,8 @@
     "allowJs": true,
     "declaration": true,
     "target": "es2021",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "types": ["node", "mocha"]
   },
   "include": ["./src/**/*", "./test/**/*", "index.ts"],
   "exclude": [
