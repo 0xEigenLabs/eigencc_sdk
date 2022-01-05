@@ -3,7 +3,7 @@ import * as sdk from "../src/sdk";
 import * as util from "../src/util";
 import * as crypto from "crypto";
 
-import * as ecies from "../src/ecies";
+import * as ecies from "@ieigen/ecies-js";
 import * as elliptic from "elliptic"
 const EC = elliptic.ec;
 const ec = new EC("p256");
@@ -55,7 +55,8 @@ describe("basic sdk", async() => {
             const publicKey = keyPair.getPublic();
 
             // generate c1
-            const privateKey = crypto.randomBytes(32).toString("base64");
+            const rawPrivateKey = crypto.randomBytes(32)
+            let privateKey = rawPrivateKey.toString("base64");
             const c1 = ecies.encrypt(publicKey, privateKey, options).toString("hex");
             console.log("c1", c1)
 
@@ -70,7 +71,7 @@ describe("basic sdk", async() => {
             client.submit_task("relay", encryptMsg, async(c2) => {
                 // console.log(c2)
                 // decrypt
-                const aesKey = crypto.randomBytes(32)
+                const aesKey = "12345678901234567890123456789012"//crypto.randomBytes(32)
                 // console.log(aesKey)
                 const cr1 = ecies.encrypt(publicKey, aesKey, options).toString("hex")
                 const cc2 = c2.toString("hex")
@@ -79,7 +80,7 @@ describe("basic sdk", async() => {
                 console.log("cc2, cc1, cr1", encryptMsg)
                 client.submit_task("relay", encryptMsg, async (decryptedPrivateKey) => {
                     const privateKey2 = ecies.aes_dec('aes-256-gcm', aesKey, Buffer.from(decryptedPrivateKey, "base64"))
-                    // console.log("msg", privateKey2)
+                    console.log("msg", privateKey2, privateKey, Buffer.from(privateKey2, "base64").toString("hex"), rawPrivateKey.toString("hex"))
                     chai.expect(privateKey).to.eq(privateKey2)
                     // console.log("Done")
                 })
