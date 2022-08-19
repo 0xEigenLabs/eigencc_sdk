@@ -1,6 +1,6 @@
-# Eigen Relay SDK
+# Eigen CC SDK
 
-[EigenCC](https://github.com/ieigen/ieigen/tree/main/cc)/Relay Javascript SDK.
+[EigenCC](https://github.com/0xEigenLabs/eigencc) Javascript SDK.
 
 ## Usage
 
