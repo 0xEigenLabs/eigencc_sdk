@@ -1,6 +1,6 @@
 {
-  "name": "relay_sdk",
-  "version": "0.0.10",
+  "name": "eigencc_sdk",
+  "version": "0.0.1",
   "license": "Apache-2.0",
   "keywords": [
     "EigenNetwork",
