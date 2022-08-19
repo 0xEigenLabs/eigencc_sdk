@@ -9,8 +9,8 @@
     "EigenRelay",
     "Blockchain"
   ],
-  "homepage": "https://ieigen.com",
-  "repository": "https://github.com/ieigen/relay_sdk",
+  "homepage": "https://eigen.cash",
+  "repository": "https://github.com/0xEigenLabs/eigencc_sdk",
   "main": "./lib/index.js",
   "types": "dist/index.d.ts",
   "author": "Eigenlab",
